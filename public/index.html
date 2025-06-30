@@ -395,66 +395,80 @@ const apiUrl = `https://api.neoxr.eu/api/tiktok?url=${encodeURIComponent(url)}&a
 }
 
 
-async function downloadYT() {
-  const url = document.getElementById('urlInput').value.trim();
-  const resultDiv = document.getElementById('result');
 
-  if (!url) {
-    resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
-    return;
-  }
+  
+ 
+  async function downloadYT() {
+    const url = document.getElementById('urlInput').value.trim();
+    const resultDiv = document.getElementById('result');
 
-  resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data YouTube...</p>";
+    if (!url) {
+      resultDiv.innerHTML = "<p class='text-yellow-400'>⚠️ Link tidak boleh kosong.</p>";
+      return;
+    }
 
-  try {
-    const res = await fetch(`/api/youtube?url=${encodeURIComponent(url)}`);
-    const data = await res.json();
+    resultDiv.innerHTML = "<p class='text-gray-400 animate-pulse'>⏳ Mengambil data YouTube...</p>";
 
-    if (!res.ok || !data.formats) throw new Error(data.error || "Gagal");
+    try {
+      const apiUrl = "https://f3002982-3fd4-4aa4-8f13-901997cfe69e-00-1er51kqce6gf7.spock.replit.dev/api/download";
+      const res = await fetch(`${apiUrl}?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
 
-    resultDiv.innerHTML = `
-      <div class="text-left space-y-6">
-        <div class="flex gap-4 items-start flex-col sm:flex-row">
-          <img src="${data.thumbnail}" class="w-40 rounded-lg shadow-lg" />
+      if (data.error || !data.formats) {
+        resultDiv.innerHTML = `<p class='text-red-500'>❌ ${data.error || 'Gagal mengambil data video.'}</p>`;
+        return;
+      }
+
+      const duration = Math.floor(data.duration / 60) + "m " + (data.duration % 60) + "s";
+
+      const formatsHTML = data.formats.map(v => `
+        <tr class="border-t border-gray-700 hover:bg-gray-800 transition">
+          <td class="px-4 py-2">${v.quality}</td>
+          <td class="px-4 py-2">${v.filesize ? (v.filesize / 1024 / 1024).toFixed(2) + ' MB' : '-'}</td>
+          <td class="px-4 py-2">
+            <a href="${v.url}" download>
+              <button class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm">⬇ Download</button>
+            </a>
+          </td>
+        </tr>
+      `).join('');
+
+      resultDiv.innerHTML = `
+        <div class="text-left space-y-6">
+          <div class="flex gap-4 items-start flex-col sm:flex-row">
+            <img src="${data.thumbnail}" class="w-40 rounded-lg shadow-lg" />
+            <div>
+              <h3 class="text-lg font-bold text-cyan-300">${data.title}</h3>
+              <p class="text-gray-400 text-sm">Channel: ${data.uploader}</p>
+              <p class="text-gray-400 text-sm">Durasi: ${duration}</p>
+            </div>
+          </div>
+
           <div>
-            <h3 class="text-lg font-bold text-cyan-300">${data.title}</h3>
-            <p class="text-gray-400 text-sm">Channel: ${data.channel}</p>
-            <p class="text-gray-400 text-sm">Views: ${data.views}</p>
+            <h4 class="text-white font-semibold mb-2">🎬 Pilihan Kualitas Video:</h4>
+            <table class="w-full text-sm text-left text-white border border-gray-700 rounded overflow-hidden">
+              <thead class="bg-gray-800 text-gray-300">
+                <tr>
+                  <th class="px-4 py-2 border-b border-gray-700">Resolusi</th>
+                  <th class="px-4 py-2 border-b border-gray-700">Ukuran</th>
+                  <th class="px-4 py-2 border-b border-gray-700">Download</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${formatsHTML}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div>
-          <h4 class="text-white font-semibold mb-2">🎬 Pilihan Kualitas Video:</h4>
-          <table class="w-full text-sm text-left text-white border border-gray-700 rounded overflow-hidden">
-            <thead class="bg-gray-800 text-gray-300">
-              <tr>
-                <th class="px-4 py-2 border-b border-gray-700">Kualitas</th>
-                <th class="px-4 py-2 border-b border-gray-700">Ukuran</th>
-                <th class="px-4 py-2 border-b border-gray-700">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.formats.map(v => `
-                <tr class="border-t border-gray-700 hover:bg-gray-800 transition">
-                  <td class="px-4 py-2">${v.quality}</td>
-                  <td class="px-4 py-2">${v.size}</td>
-                  <td class="px-4 py-2">
-                    <a href="${v.url}" download>
-                      <button class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm">⬇ Download</button>
-                    </a>
-                  </td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  } catch (err) {
-    console.error(err);
-    resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal mengambil data video.</p>";
+      `;
+    } catch (err) {
+      console.error(err);
+      resultDiv.innerHTML = "<p class='text-red-500'>❌ Gagal menghubungi backend.</p>";
+    }
   }
-}
-<!--VERSI YANG ADA YOUTUBE NYA-->
+
+
+<!--VERSI YANG ADA YOUTUBE NYA>a
   </script>
 </body>
 </html>
